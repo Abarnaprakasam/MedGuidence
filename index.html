@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoke Node.js Script</title>
+</head>
+<body>
+    <h1>MedGuidance</h1>
+    
+    <label for="formUrl">Form URL:</label>
+    <input type="text" id="formUrl" placeholder="Enter form URL">
+    <button onclick="invokeScript()">Invoke Script</button>
+    <br><br>
+    <div style="font-weight: bold;">Extracted Text:</div>
+    <div id="extractedText"></div>
+    <br>
+    <div style="font-weight: bold;">Personal Recommendation:</div>
+    <div id="openaiResult"></div>
+    <script>
+        async function invokeScript() {
+            const formUrl = document.getElementById('formUrl').value;
+
+            try {
+                const response = await fetch(`http://localhost:3000/invoke-script?formUrl=${encodeURIComponent(formUrl)}`);
+                const result = await response.text();
+                document.getElementById('extractedText').innerText = result;
+                console.log(result);
+                // Handle the result as needed
+
+                const apiKey = ''; // Replace with your actual OpenAI API key
+                const model = 'gpt-3.5-turbo-0613';
+                const tokens = 1000;
+                const prompt = 'Explain the prescription and provide suitable recommendation for the patient. ';
+
+                    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`,
+                        },
+                        body: JSON.stringify({
+                            model,
+                            messages: [
+                                { role: 'user', content: prompt+result },
+                            ],
+                            max_tokens: tokens,
+                        }),
+                    });
+
+                    const res = await resp.json();
+                    console.log(res.choices[0].message.content);
+                    document.getElementById('openaiResult').innerText = res.choices[0].message.content;
+        } catch (error) {
+                console.error('Error:', error.message);
+                // Handle errors
+            }
+        }
+    </script>
+</body>
+</html>
